@@ -6,9 +6,9 @@ import com.rb.post.dto.PostRequest;
 import com.rb.post.entity.PostEntity;
 import com.rb.post.exception.PostException;
 import com.rb.post.repo.PostRepository;
-import com.rb.post.utils.UtilClass;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -17,6 +17,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PostService {
 
     private final PostRepository postRepository;
@@ -24,14 +25,22 @@ public class PostService {
     private final UserClient userClient;
 
     public PostEntity postToDB(PostRequest postRequest) {
-        Integer postedBy = postRequest.getPostedBy();
+        String postedBy = postRequest.getPostedBy();
         final PostEntity post = objectMapper.convertValue(postRequest, PostEntity.class);
         post.setCreatedAt(Instant.now().toString());
-        if(userClient.getUserById(postedBy).getStatusCode() == HttpStatus.OK){
-            UtilClass.TokenContext.remove();
-            post.setPostedBy(postedBy);
-            return postRepository.save(post);
-        }else throw new PostException("No post owner found ");
+        checkUserExistence(postedBy);
+        post.setPostedBy(postedBy);
+        log.info("Qualified POST : {}",post);
+        return postRepository.save(post);
+    }
+
+    private void checkUserExistence(String userId) throws PostException{
+        try{
+            userClient.getUserById(userId);
+        }catch (FeignException.BadRequest ex){
+            log.info("No user found to post");
+            throw new PostException("No user found with id : "+userId);
+        }
     }
 
     public PostEntity getPostById(Integer id){
@@ -46,13 +55,11 @@ public class PostService {
         else throw new PostException("No post found with id : "+id);
     }
 
-    public List<PostEntity> getPostsOfUser(Integer userId){
-        if(userClient.getUserById(userId).getStatusCode()== HttpStatus.OK){
-            UtilClass.TokenContext.remove();
-            List<PostEntity> postsOfUser = postRepository.findByPostedBy(userId);
-            if (postsOfUser.isEmpty()) throw new PostException("No posts found for the user : "+userId);
-            else return postsOfUser;
-        }else throw new PostException("No user found with id : "+userId);
+    public List<PostEntity> getPostsOfUser(String userId){
+        checkUserExistence(userId);
+        List<PostEntity> postsOfUser = postRepository.findByPostedBy(userId);
+        if (postsOfUser.isEmpty()) throw new PostException("User : "+userId+" not posted yet");
+        else return postsOfUser;
     }
 
 }

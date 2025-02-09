@@ -1,6 +1,5 @@
 package com.rb.post.entity;
 
-import com.rb.post.dto.User;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -15,7 +14,7 @@ public class PostEntity {
     private String content;
     @Column(length = 100000)
     private String imageUrl;
-    private Integer postedBy;
+    private String postedBy;
     private String createdAt;
 
 }
