@@ -7,6 +7,5 @@ public class PostRequest {
 
     private String content;
     private String imageUrl;
-    private String postedBy;
 
 }

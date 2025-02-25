@@ -24,22 +24,21 @@ public class PostService {
     private final ObjectMapper objectMapper;
     private final UserClient userClient;
 
-    public PostEntity postToDB(PostRequest postRequest) {
-        String postedBy = postRequest.getPostedBy();
+    public PostEntity postToDB(PostRequest postRequest,String userName) {
         final PostEntity post = objectMapper.convertValue(postRequest, PostEntity.class);
         post.setCreatedAt(Instant.now().toString());
-        checkUserExistence(postedBy);
-        post.setPostedBy(postedBy);
+        checkUserExistence(userName);
+        post.setPostedBy(userName);
         log.info("Qualified POST : {}",post);
         return postRepository.save(post);
     }
 
-    private void checkUserExistence(String userId) throws PostException{
+    private void checkUserExistence(String userName) throws PostException{
         try{
-            userClient.getUserById(userId);
+            userClient.searchUser(userName);
         }catch (FeignException.BadRequest ex){
             log.info("No user found to post");
-            throw new PostException("No user found with id : "+userId);
+            throw new PostException("No user found with username : "+userName);
         }
     }
 
@@ -55,10 +54,10 @@ public class PostService {
         else throw new PostException("No post found with id : "+id);
     }
 
-    public List<PostEntity> getPostsOfUser(String userId){
-        checkUserExistence(userId);
-        List<PostEntity> postsOfUser = postRepository.findByPostedBy(userId);
-        if (postsOfUser.isEmpty()) throw new PostException("User : "+userId+" not posted yet");
+    public List<PostEntity> getPostsOfUser(String userName){
+        checkUserExistence(userName);
+        List<PostEntity> postsOfUser = postRepository.findByPostedBy(userName);
+        if (postsOfUser.isEmpty()) throw new PostException("User : "+userName+" not posted yet");
         else return postsOfUser;
     }
 
