@@ -3,12 +3,16 @@ package com.rb.post.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rb.post.client.UserClient;
 import com.rb.post.dto.PostRequest;
+import com.rb.post.dto.User;
 import com.rb.post.entity.PostEntity;
 import com.rb.post.exception.PostException;
 import com.rb.post.repo.PostRepository;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -34,9 +38,10 @@ public class PostService {
     }
 
     private void checkUserExistence(String userName) throws PostException{
-        try{
-            userClient.searchUser(userName);
-        }catch (FeignException.BadRequest ex){
+        ResponseEntity<User> userResponseEntity = userClient.searchUser(userName);
+        if(userResponseEntity.getStatusCode()== HttpStatus.OK){
+            log.info("User found with user name : {}",userName);
+        }else{
             log.info("No user found to post");
             throw new PostException("No user found with username : "+userName);
         }
