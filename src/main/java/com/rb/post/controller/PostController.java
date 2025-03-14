@@ -17,8 +17,8 @@ public class PostController {
     private final PostService postService;
 
     @PostMapping
-    public ResponseEntity<PostEntity> post(@RequestBody PostRequest postRequest) {
-        return ResponseEntity.ok(postService.postToDB(postRequest));
+    public ResponseEntity<PostEntity> post(@RequestBody PostRequest postRequest, @RequestHeader("${customized-header-for-token}") String username) {
+        return ResponseEntity.ok(postService.postToDB(postRequest,username));
     }
 
     @GetMapping("/{id}")
@@ -32,8 +32,13 @@ public class PostController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/users/{userId}")
-    public ResponseEntity<List<PostEntity>> getPostsOfUser(@PathVariable("userId") String userId) {
-        return ResponseEntity.ok(postService.getPostsOfUser(userId));
+    @GetMapping("/users")
+    public ResponseEntity<List<PostEntity>> getPostsOfUser(@RequestHeader("${customized-header-for-token}") String username) {
+        return ResponseEntity.ok(postService.getPostsOfUser(username));
+    }
+
+    @GetMapping("/users/{username}")
+    public ResponseEntity<List<PostEntity>> getPostsOfOtherUser(@PathVariable("username") String username) {
+        return ResponseEntity.ok(postService.getPostsOfUser(username));
     }
 }
