@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM openjdk:17-jdk-slim AS builder
+FROM openjdk:27-ea-oraclelinux9 AS builder
 
 # Set the working directory
 WORKDIR /app
