@@ -19,7 +19,7 @@ COPY src /app/src
 RUN ./gradlew bootJar --no-daemon
 
 # Stage 2: Runtime
-FROM openjdk:17-jdk-slim
+FROM openjdk:27-ea-oraclelinux9
 
 # Set the working directory
 WORKDIR /app
